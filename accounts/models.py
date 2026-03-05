@@ -29,8 +29,8 @@ class UserManager(BaseUserManager):
         
 # Create your models here.
 class User(AbstractBaseUser,PermissionsMixin):
-    email=models.EmailField(unique=True,max_length=255)
-    username=models.CharField(max_length=255,unique=True)
+    email=models.EmailField(unique=True,max_length=255,null=False)
+    username=models.CharField(max_length=255,unique=True,null=False)
     
     is_active=models.BooleanField(default=True)
     is_staff=models.BooleanField(default=False)
@@ -49,6 +49,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     
 class Profile(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
+    username=models.CharField(max_length=255,unique=True)
     
     user_type=models.CharField(
         max_length=10,
@@ -69,7 +70,7 @@ class Profile(models.Model):
 @receiver(post_save,sender=User)
 def save_profile(sender,instance,created,**kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.create(user=instance,username=instance.username)
     
     
     
