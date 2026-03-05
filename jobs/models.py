@@ -37,5 +37,5 @@ class Application(models.Model):
         unique_together=('job','applicant')
         
     def __str__(self):
-        return f'{self.applicant.email} for {self.job.title}'
+        return f'{self.applicant.user.email} for {self.job.title}'
     

@@ -1,0 +1,17 @@
+# general module
+django
+python-decouple
+Pillow
+djangorestframework
+
+# third party module
+markdown       
+django-filter  
+drf-yasg[validation]
+djangorestframework-simplejwt
+
+# deployment module
+
+
+# email third party module
+django-mail-templated
