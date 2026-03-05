@@ -40,8 +40,12 @@ class UserAdmin(BaseUseAdmin):
     
     
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('email','username', 'password')}),
         (('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     
+    def get_readonly_fields(self, request, obj = ...):
+        if obj:
+            return self.readonly_fields + ('email',)
+        return super().get_readonly_fields(request, obj)
     
