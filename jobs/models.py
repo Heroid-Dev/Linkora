@@ -17,8 +17,12 @@ class Job(models.Model):
     posted_date=models.DateTimeField(auto_now_add=True)
     is_active=models.BooleanField(default=True)
     
+    class Meta:
+        order_with_respect_to='employee'
+    
     def __str__(self):
         return self.title
+    
     
     
 class Application(models.Model):
