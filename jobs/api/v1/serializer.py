@@ -10,18 +10,7 @@ class JobSerializer(serializers.ModelSerializer):
 
     class Meta:
         model=Job
-        fields=[
-            'id',
-            'email',
-            'title',
-            'description',
-            'location',
-            'is_remote',
-            'salary_min',
-            'salary_max',
-            'posted_date',
-            'is_active'
-            ]
+        fields=['id','email','title','description','location','is_remote','salary_min','salary_max','posted_date','is_active']
         read_only_fields=['email']
         
     def validate_salary_min(self,value):
@@ -82,8 +71,13 @@ class JobApplySerializer(serializers.ModelSerializer):
         if Application.objects.filter(job=job,applicant=request.user.profile).exists():
             raise serializers.ValidationError("you already applied for this job")
         
-        if job.employee == request.user.profile :
-            raise serializers.ValidationError("You cannot apply to your own job.")
+        # if job.employee == request.user.profile :
+        #     raise serializers.ValidationError("You cannot apply to your own job.")
         return super().validate(attrs)
-    
+   
 
+class ApplicationStatusSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model=Application
+        fields=['status']
