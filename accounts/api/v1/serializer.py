@@ -9,9 +9,10 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 class RegisterationSerializer(serializers.ModelSerializer):
     password1=serializers.CharField(max_length=20,write_only=True)
+    user_type = serializers.ChoiceField(choices=['INDIVIDUAL','COMPANY'])
     class Meta:
         model=User
-        fields=['email','username','password','password1','is_active','is_staff']
+        fields=['email','username','password','password1','user_type']
     
     def validate(self, attrs):
         if attrs.get('password')!=attrs.get('password1'):
@@ -25,8 +26,20 @@ class RegisterationSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
     
     def create(self, validated_data):
+        user_type = validated_data.pop('user_type')
         validated_data.pop('password1')
-        return super().create(validated_data)
+        password = validated_data.pop('password')
+
+        user = super().create(validated_data)
+
+        user.set_password(password)
+        user.save()
+
+        user.profile.user_type = user_type
+        user.profile.save()
+
+        return user
+   
     
     
     

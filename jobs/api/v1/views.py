@@ -6,15 +6,22 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from .permission import IsApplicant,IsEmployer,IsJobOwner,IsApplicationOwner
+
+
+
+
+
 class JobsListView(generics.GenericAPIView):
-    queryset=Job.objects.all()
     serializer_class=JobSerializer
-    permission_classes=[permissions.IsAuthenticated,permissions.IsAuthenticatedOrReadOnly]
+    permission_classes=[permissions.IsAuthenticatedOrReadOnly,IsEmployer]
     
+    def get_queryset(self):
+        return Job.objects.filter(employee=self.request.user.profile)
+
     
     def get(self,request):
-        jobs=Job.objects.all()
-        serializer=self.serializer_class(jobs,many=True)
+        serializer=self.serializer_class(self.get_queryset(),many=True)
         return Response(serializer.data)
     
     def post(self,request):
@@ -23,11 +30,10 @@ class JobsListView(generics.GenericAPIView):
         serializer.save(employee=request.user.profile)
         return Response(serializer.data,status=status.HTTP_201_CREATED)   
     
-
 class JobsDetailView(generics.GenericAPIView):
     queryset=Job.objects.all()
     serializer_class=JobSerializer
-    permission_classes=[permissions.IsAuthenticated,permissions.IsAuthenticatedOrReadOnly]
+    permission_classes=[permissions.IsAuthenticated,IsEmployer]
     
     def get_object(self,pk,profile):
         try:
@@ -60,7 +66,7 @@ class JobsDetailView(generics.GenericAPIView):
         
 class ApplyVeiw(generics.CreateAPIView):
     serializer_class=JobApplySerializer
-    permission_classes=[permissions.IsAuthenticated]
+    permission_classes=[permissions.IsAuthenticated,IsApplicant]
     
     def get_job(self):
         return get_object_or_404(Job,id=self.kwargs["job_id"])
@@ -78,14 +84,14 @@ class ApplyVeiw(generics.CreateAPIView):
         
 class ListAppView(generics.ListAPIView):
     serializer_class=ApplicationSerializer
-    permission_classes=[permissions.IsAuthenticated]
+    permission_classes=[permissions.IsAuthenticated,IsApplicant]
     
     def get_queryset(self):
         return Application.objects.filter(applicant=self.request.user.profile)
     
 class RetrieveDestroyAppView(generics.RetrieveDestroyAPIView):
     serializer_class=ApplicationSerializer
-    permission_classes=[permissions.IsAuthenticated]
+    permission_classes=[permissions.IsAuthenticated,IsApplicant]
 
     
     def get_queryset(self):
