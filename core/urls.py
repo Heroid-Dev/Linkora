@@ -29,7 +29,7 @@ urlpatterns = [
     path('accounts/',include('accounts.urls')),
     path('jobs/',include('jobs.urls')),
     path('connections/',include('connections.urls')),
-    
+    path('notification/',include('notifications.urls')),
     
      # For document
     path('swagger.json/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

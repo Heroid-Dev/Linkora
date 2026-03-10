@@ -10,7 +10,7 @@ class ProfileAdmin(admin.ModelAdmin):
     
     def get_readonly_fields(self, request, obj = None):
         if obj:
-            return self.readonly_fields + ('user',)
+            return self.readonly_fields + ('user__email',)
         return self.readonly_fields
     
 

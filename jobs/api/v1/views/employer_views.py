@@ -3,6 +3,7 @@ from jobs.models import Application,Job
 from ..serializer import ApplicationSerializer,JobSerializer,ApplicationStatusSerializer
 from rest_framework import permissions
 from ..permission import IsEmployer
+from notifications.models import Notification
 
     
 
@@ -30,5 +31,22 @@ class EmployerApplicationUpdateView(generics.UpdateAPIView):
     
     def get_queryset(self):
         return Application.objects.filter(job__employee=self.request.user.profile)
+    
+    def perform_update(self, serializer):
+        application = serializer.save()
+        
+        if serializer.data.get('status') == 'Accepted':
+            Notification.objects.create(
+                user=application.applicant.user,
+                title='Application Accepted',
+                message=f'Your application for {application.job.title} has been accepted.'
+            )
+            
+        if serializer.data.get('status') == 'Rejected':
+            Notification.objects.create(
+                user=application.applicant.user,
+                title='Application Rejected',
+                message=f'Your application for {application.job.title} was rejected.'
+            )
     
     

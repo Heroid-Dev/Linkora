@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts.apps.AccountsConfig',
     'connections.apps.ConnectionsConfig',
+    'notifications.apps.NotificationsConfig',
     'jobs.apps.JobsConfig',
     'rest_framework',
     'drf_yasg',

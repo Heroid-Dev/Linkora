@@ -4,6 +4,7 @@ from ..serializer import ApplicationSerializer,JobApplySerializer
 from rest_framework import permissions
 from django.shortcuts import get_object_or_404
 from ..permission import IsApplicant
+from notifications.models import Notification
 
 
 
@@ -22,10 +23,17 @@ class ApplyView(generics.CreateAPIView):
         return context
     
     def perform_create(self, serializer):
-        serializer.save(
+        application=serializer.save(
             job=self.get_job(),
             applicant=self.request.user.profile
         )
+        
+        Notification.objects.create(
+            user=self.get_job().employee.user,
+            title=f'New Application from {self.request.user.username}',
+            message=f'{self.request.user.email} applied for {application.job.title}'
+        )
+        
         
         
 
