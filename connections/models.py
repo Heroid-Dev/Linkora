@@ -11,5 +11,4 @@ class Connection(models.Model):
         constraints= [ models.UniqueConstraint(fields=['following','follower'],name='unique_follow') ]
         
     def __str__(self):
-        return f"{self.follower.user.username} is now following {self.following.user.username}"
-    
+        return f"{self.follower.user.username} is now following {self.following.user.username}"    
