@@ -26,8 +26,8 @@ class Job(models.Model):
     
     
 class Application(models.Model):
-    job=models.ForeignKey(Job,on_delete=models.CASCADE)
-    applicant=models.ForeignKey('accounts.Profile',on_delete=models.CASCADE)
+    job=models.ForeignKey(Job,on_delete=models.CASCADE,related_name='applications')
+    applicant=models.ForeignKey('accounts.Profile',on_delete=models.CASCADE,related_name='applications')
     
     resume=models.FileField()
     application_date=models.DateTimeField(auto_now_add=True)

@@ -7,10 +7,10 @@ class JobSerializer(serializers.ModelSerializer):
     email=serializers.EmailField(source='employee.user.email',read_only=True)
     salary_min = serializers.IntegerField(required=True)
     salary_max = serializers.IntegerField(required=True)
-
+    application_count = serializers.IntegerField(source='applications.count',read_only=True)
     class Meta:
         model=Job
-        fields=['id','email','title','description','location','is_remote','salary_min','salary_max','posted_date','is_active']
+        fields=['id','email','title','description','location','is_remote','salary_min','salary_max','posted_date','application_count']
         read_only_fields=['email']
         
     def validate_salary_min(self,value):

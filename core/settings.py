@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'connections.apps.ConnectionsConfig',
     'notifications.apps.NotificationsConfig',
+    'posts.apps.PostsConfig',
     'jobs.apps.JobsConfig',
     'rest_framework',
     'drf_yasg',

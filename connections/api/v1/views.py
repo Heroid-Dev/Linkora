@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from connections.models import Connection
+from notifications.models import Notification
 
 class FollowUserView(generics.CreateAPIView):
     queryset=Connection.objects.all()
@@ -20,6 +21,12 @@ class FollowUserView(generics.CreateAPIView):
         
         if follower == following :
             raise ValidationError('You cannot follow yourself')
+        
+        Notification.objects.create(
+            user=following.user,
+            title='New follower',
+            message=f'{follower.username} follow you'
+        )
         
         serializer.save(follower=follower,following=following)
         
