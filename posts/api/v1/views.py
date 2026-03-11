@@ -1,8 +1,8 @@
 from rest_framework.exceptions import ValidationError
 
-from posts.models import Post,Comment
+from posts.models import Post,Comment,Like
 from rest_framework.viewsets import ModelViewSet
-from .serializers import PostSerializer,CommentSerializer
+from .serializers import PostSerializer,CommentSerializer,LikeSerializer
 from rest_framework import permissions, status
 from rest_framework import generics
 from notifications.models import Notification
@@ -10,34 +10,44 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.response import Response
 class PostModelViewSet(ModelViewSet):
-    serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     queryset = Post.objects.select_related(
         "author", "author__user"
     )
 
+
+    def get_serializer_class(self):
+        if self.action in ['like','unlike','likes']:
+            return LikeSerializer
+        elif self.action in ['comment']:
+            return CommentSerializer
+        else:
+            return PostSerializer
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user.profile)
 
     @action(detail=False, methods=['get'],permission_classes=[permissions.IsAuthenticated])
     def mine(self,request):
+        serializer_class = self.get_serializer_class()
         posts= self.queryset.filter(author=self.request.user.profile)
-        serializer= self.serializer_class(posts,many=True)
+        serializer= serializer_class(posts,many=True)
         return Response(serializer.data)
 
 
     @action(detail=True, methods=['GET','POST'])
     def comment(self,request,pk):
         post= self.get_object()
+        serializer_class = self.get_serializer_class()
 
         if request.method == 'GET':
             comments= Comment.objects.filter(post=post)
-            serializer= CommentSerializer(comments,many=True)
+            serializer= serializer_class(comments,many=True)
             return Response(serializer.data)
 
         if request.method == 'POST':
-            serializer= CommentSerializer(data=request.data)
+            serializer= serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save(post=post,author=self.request.user.profile)
             Notification.objects.create(
@@ -49,33 +59,48 @@ class PostModelViewSet(ModelViewSet):
         return None
 
 
-class CommentView(generics.ListCreateAPIView):
-    serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    @action(detail=True,methods=['POST'])
+    def like(self,request,pk=None):
+        post= self.get_object()
 
-    def get_post(self):
-        return get_object_or_404(
-            Post,
-            id=self.kwargs['post_id']
+        like,create=Like.objects.get_or_create(
+            post=post,
+            user=request.user.profile
         )
 
-    def get_queryset(self):
-        return Comment.objects.filter(post=self.get_post())
-
-    def perform_create(self, serializer):
-        post = self.get_post()
+        if not create:
+            return Response({"detail":"you already liked this post"},status=status.HTTP_400_BAD_REQUEST)
 
         Notification.objects.create(
             user=post.author.user,
-            title='New Comment',
-            message=f'New Comment for this post: {post.title}'
+            title='Like your post',
+            message=f'user {request.user.username} liked your post {post.title}'
         )
-        serializer.save(post=post,author=self.request.user.profile)
+
+        return Response({"detail":"Post liked."},status=status.HTTP_201_CREATED)
 
 
-class AllPost(generics.ListAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    @action(detail=True,methods=['POST'])
+    def unlike(self,request,pk=None):
+        post= self.get_object()
+        like=Like.objects.filter(post=post,user=request.user.profile)
+        if not like.exists():
+            return Response({"detail":"You have not liked this post."},status=status.HTTP_400_BAD_REQUEST)
+        like.delete()
+        return Response({"detail":"Post unliked."},status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True,methods=['GET'])
+    def likes(self,request,pk=None):
+        post= self.get_object()
+        likes=Like.objects.filter(post=post)
+        serializer_class = self.get_serializer_class()
+        serializer=serializer_class(likes,many=True)
+        return Response(serializer.data)
+
+
+
+
+
+
 
 
