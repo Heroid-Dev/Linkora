@@ -1,8 +1,8 @@
 
 from rest_framework.exceptions import ValidationError
-from posts.models import Post,Comment,Like
+from posts.models import Post,Comment,Like,PostCategory,Tag
 from rest_framework.viewsets import ModelViewSet
-from .serializers import PostSerializer,CommentSerializer,LikeSerializer
+from .serializers import PostSerializer,CommentSerializer,LikeSerializer,PostCategorySerializer,TagSerializer
 from rest_framework import permissions, status
 from notifications.models import Notification
 from rest_framework.decorators import action
@@ -149,7 +149,15 @@ class PostModelViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
+class PostCategoryModelViewSet(ModelViewSet):
+    queryset = PostCategory.objects.all()
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    serializer_class = PostCategorySerializer
 
+class TagModelViewSet(ModelViewSet):
+    queryset = Tag.objects.all()
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    serializer_class = TagSerializer
 
 
 

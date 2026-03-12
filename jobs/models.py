@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.text import slugify
+
 
 # Create your models here.
 
@@ -16,6 +18,8 @@ class Job(models.Model):
     salary_max=models.IntegerField(null=True,blank=True)
     posted_date=models.DateTimeField(auto_now_add=True)
     is_active=models.BooleanField(default=True)
+    category=models.ForeignKey('JobCategory',on_delete=models.CASCADE,related_name='jobs',null=True)
+    skill=models.ManyToManyField('Skill',related_name='jobs',blank=True)
     
     class Meta:
         order_with_respect_to='employee'
@@ -42,4 +46,31 @@ class Application(models.Model):
         
     def __str__(self):
         return f'{self.applicant.user.email} for {self.job.title}'
+
+class JobCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+class Skill(models.Model):
+    name = models.CharField(max_length=80, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+
     

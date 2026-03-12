@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from jobs.models import Job,Application
+from jobs.models import Job,Application,JobCategory,Skill
 
 
 
@@ -8,9 +8,13 @@ class JobSerializer(serializers.ModelSerializer):
     salary_min = serializers.IntegerField(required=True)
     salary_max = serializers.IntegerField(required=True)
     application_count = serializers.IntegerField(source='applications.count',read_only=True)
+
+    category = serializers.SlugRelatedField(slug_field='name', queryset=JobCategory.objects.all(), many=False)
+    skill = serializers.SlugRelatedField(slug_field='name', queryset=Skill.objects.all(), many=True)
+
     class Meta:
         model=Job
-        fields=['id','email','title','description','location','is_remote','salary_min','salary_max','posted_date','application_count']
+        fields=['id','email','title','description','location','is_remote','salary_min','salary_max','category','skill','posted_date','application_count']
         read_only_fields=['email']
         
     def validate_salary_min(self,value):
@@ -81,3 +85,17 @@ class ApplicationStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model=Application
         fields=['status']
+
+
+class JobCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model= JobCategory
+        fields=['id','name','slug']
+        read_only_fields=['slug']
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= Skill
+        fields=['id','name','slug']
+        read_only_fields=['slug']

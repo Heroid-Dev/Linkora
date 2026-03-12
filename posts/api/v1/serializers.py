@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from posts.models import Post,Comment,Like
+from posts.models import Post,Comment,Like,PostCategory,Tag
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -16,6 +16,9 @@ class PostSerializer(serializers.ModelSerializer):
     like_count=serializers.IntegerField(source='likes.count',read_only=True)
     is_liked_by_user=serializers.SerializerMethodField(read_only=True)
 
+    category = serializers.SlugRelatedField(slug_field='name', queryset=PostCategory.objects.all(), many=True)
+    tag = serializers.SlugRelatedField(slug_field='name', queryset=Tag.objects.all(), many=True)
+
     class Meta:
         model = Post
         fields=['id',
@@ -23,6 +26,8 @@ class PostSerializer(serializers.ModelSerializer):
                 'title',
                 'content',
                 'image',
+                'category',
+                'tag',
                 'created_at',
                 'like_count',
                 'is_liked_by_user',
@@ -39,3 +44,17 @@ class LikeSerializer(serializers.ModelSerializer):
         model= Like
         fields=['post','username','created_at']
         read_only_fields=['post']
+
+
+class PostCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model= PostCategory
+        fields=['id','name','slug']
+        read_only_fields=['slug']
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= Tag
+        fields=['id','name','slug']
+        read_only_fields=['slug']

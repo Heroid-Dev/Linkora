@@ -1,5 +1,10 @@
 from django.urls import path
 from jobs.api.v1 import views
+from rest_framework.routers import DefaultRouter
+
+router= DefaultRouter()
+router.register('category',views.JobCategoryModelViewSet,basename='category')
+router.register('skill',views.SkillModelViewSet,basename='skill')
 
 app_name='api-v1'
 
@@ -17,3 +22,5 @@ urlpatterns = [
     path('employer/applications/<int:pk>/status/',views.EmployerApplicationUpdateView.as_view(),name='employer-applications-status'),
 
 ]
+
+urlpatterns += router.urls

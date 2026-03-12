@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 # Create your models here.
 
@@ -9,6 +10,8 @@ class Post(models.Model):
     content=models.TextField()
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
+    category=models.ManyToManyField('PostCategory', related_name='posts',blank=True)
+    tag=models.ManyToManyField('Tag',related_name='posts',blank=True)
 
 
     class Meta:
@@ -41,5 +44,36 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.user.user.username} liked {self.post.title}"
+
+
+class PostCategory(models.Model):
+    name=models.CharField(max_length=100,unique=True)
+    slug=models.SlugField(unique=True)
+
+    def save(self,*args,**kwargs):
+        if not self.slug:
+            self.slug=slugify(self.name)
+        super().save(*args,**kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+
+
+
 
 
