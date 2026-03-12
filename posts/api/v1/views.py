@@ -4,18 +4,21 @@ from posts.models import Post,Comment,Like
 from rest_framework.viewsets import ModelViewSet
 from .serializers import PostSerializer,CommentSerializer,LikeSerializer
 from rest_framework import permissions, status
-from rest_framework import generics
 from notifications.models import Notification
-from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from connections.models import Connection
+from django.db.models import Q
+
+
+
+
 class PostModelViewSet(ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     queryset = Post.objects.select_related(
         "author", "author__user"
     )
-
 
     def get_serializer_class(self):
         if self.action in ['like','unlike','likes']:
@@ -30,24 +33,22 @@ class PostModelViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'],permission_classes=[permissions.IsAuthenticated])
     def mine(self,request):
-        serializer_class = self.get_serializer_class()
         posts= self.queryset.filter(author=self.request.user.profile)
-        serializer= serializer_class(posts,many=True)
+        serializer= self.get_serializer(posts,many=True)
         return Response(serializer.data)
 
 
     @action(detail=True, methods=['GET','POST'])
     def comment(self,request,pk):
         post= self.get_object()
-        serializer_class = self.get_serializer_class()
 
         if request.method == 'GET':
             comments= Comment.objects.filter(post=post)
-            serializer= serializer_class(comments,many=True)
+            serializer= self.get_serializer(comments,many=True)
             return Response(serializer.data)
 
         if request.method == 'POST':
-            serializer= serializer_class(data=request.data)
+            serializer= self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save(post=post,author=self.request.user.profile)
             Notification.objects.create(
@@ -93,9 +94,17 @@ class PostModelViewSet(ModelViewSet):
     def likes(self,request,pk=None):
         post= self.get_object()
         likes=Like.objects.filter(post=post)
-        serializer_class = self.get_serializer_class()
-        serializer=serializer_class(likes,many=True)
+        serializer=self.get_serializer(likes,many=True)
         return Response(serializer.data)
+
+    @action(detail=False,methods=['GET'])
+    def feeds(self,request):
+        followings = Connection.objects.filter(follower=request.user.profile).values_list('following', flat=True)
+        posts = Post.objects.filter(Q(author__in=followings) | Q(author=request.user.profile))
+        serializer = self.get_serializer(posts, many=True)
+        return Response(serializer.data)
+
+
 
 
 

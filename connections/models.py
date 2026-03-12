@@ -3,7 +3,7 @@ from django.db import models
 
 class Connection(models.Model):
     follower=models.ForeignKey('accounts.Profile',on_delete=models.CASCADE,related_name='following')
-    following=models.ForeignKey('accounts.Profile',on_delete=models.CASCADE,related_name='folowers')
+    following=models.ForeignKey('accounts.Profile',on_delete=models.CASCADE,related_name='followers')
     
     established_date=models.DateTimeField(auto_now_add=True)
     
