@@ -1,5 +1,5 @@
-from rest_framework.exceptions import ValidationError
 
+from rest_framework.exceptions import ValidationError
 from posts.models import Post,Comment,Like
 from rest_framework.viewsets import ModelViewSet
 from .serializers import PostSerializer,CommentSerializer,LikeSerializer
@@ -8,13 +8,15 @@ from notifications.models import Notification
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from connections.models import Connection
-from django.db.models import Q
+from django.db.models import Q,Count
+from .paginations import PostPagination
 
 
 
 
 class PostModelViewSet(ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = PostPagination
 
     queryset = Post.objects.select_related(
         "author", "author__user"
@@ -34,6 +36,13 @@ class PostModelViewSet(ModelViewSet):
     @action(detail=False, methods=['get'],permission_classes=[permissions.IsAuthenticated])
     def mine(self,request):
         posts= self.queryset.filter(author=self.request.user.profile)
+
+        pages= self.paginate_queryset(posts)
+
+        if pages is not None:
+            serializer = self.get_serializer(pages,many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer= self.get_serializer(posts,many=True)
         return Response(serializer.data)
 
@@ -101,8 +110,44 @@ class PostModelViewSet(ModelViewSet):
     def feeds(self,request):
         followings = Connection.objects.filter(follower=request.user.profile).values_list('following', flat=True)
         posts = Post.objects.filter(Q(author__in=followings) | Q(author=request.user.profile))
+
+        page = self.paginate_queryset(posts)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(posts, many=True)
         return Response(serializer.data)
+
+
+    @action(detail=False,methods=['GET'])
+    def suggestions(self,request):
+        following=Connection.objects.filter(follower=request.user.profile).values_list('following',flat=True)
+
+        posts=Post.objects.exclude(Q(author__in=following) | Q(author=request.user.profile))[:20]
+
+        pages=self.paginate_queryset(posts)
+        if pages is not None:
+            serializer= self.get_serializer(pages,many=True)
+            return Response(serializer.data)
+
+        serializer=self.get_serializer(posts,many=True)
+        return Response(serializer.data)
+
+    @action(detail=False,methods=['GET'])
+    def trending(self,request):
+        posts=Post.objects.annotate(
+            like_count=Count('likes')
+        ).order_by('-like_count')[:20]
+
+        pages=self.paginate_queryset(posts)
+        if pages is not None:
+            serializer = self.get_serializer(pages,many=True)
+            return Response(serializer.data)
+
+        serializer=self.get_serializer(posts,many=True)
+        return Response(serializer.data)
+
 
 
 
